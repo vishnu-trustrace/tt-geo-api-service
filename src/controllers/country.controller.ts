@@ -8,6 +8,7 @@ import {
 } from '@loopback/repository';
 import {
   del, get,
+  getFieldsJsonSchemaFor,
   getModelSchemaRef, param, patch, post, put, requestBody,
   response
 } from '@loopback/rest';
@@ -203,5 +204,49 @@ export class CountryController {
     filter.where = Object.assign({},filter.where,{countryId: countryObj.countryId});
 
     return cityRepo.find(filter);
+  }
+
+  @get('/country/search')
+  @response(200, {
+    description: 'Array of Country model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(Country, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async countrySearch(
+    @param.filter(Country) filter?: Filter<Country>,
+  ): Promise<City[]> {
+
+    let cityRepo: CityRepository = new CityRepository(
+      new MongodbDataSource()
+    );
+    let stateRepo: StateRepository = new StateRepository(
+      new MongodbDataSource()
+    );
+
+    let countryData = await this.countryRepository.find(filter);
+    let countryIds = countryData.map(countryItem => countryItem.countryId);
+      
+    let stateData = await stateRepo.find({
+      fields: ["id","name","stateId","countryId"],
+      where: {countryId: {inq: countryIds}}
+    });
+    let cityData = await cityRepo.find({
+      limit: 200,
+      where: {countryId: {inq: countryIds}}
+    });
+
+    cityData = cityData.map(cityItem => {
+      cityItem.state = [...stateData.filter(stateItem => stateItem.stateId === cityItem.stateId)][0];
+      cityItem.country = [...countryData.filter(countryItem => countryItem.countryId === cityItem.countryId)][0]
+      return cityItem
+    })
+
+    return cityData;
   }
 }

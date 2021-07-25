@@ -60,6 +60,18 @@ export class City extends Entity {
   })
   longitude: string;
 
+  @property({
+    type: 'object',
+    default: null
+  })
+  country: object
+
+  @property({
+    type: 'object',
+    default: null
+  })
+  state: object
+
 
   constructor(data?: Partial<City>) {
     super(data);

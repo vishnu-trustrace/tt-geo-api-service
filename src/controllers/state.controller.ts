@@ -194,4 +194,54 @@ export class StateController {
 
     return cityRepo.find(filter);
   }
+
+  @get('/states/search')
+  @response(200, {
+    description: 'Array of State model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(State, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async searchState(
+    @param.filter(State) filter?: Filter<State>,
+  ): Promise<City[]> {
+
+    let stateData = await this.stateRepository.find(filter);
+    let stateIds = stateData.map(stateItem => stateItem.stateId);
+
+    let countryRepo: CountryRepository = new CountryRepository(
+      new MongodbDataSource()
+    );
+    let cityRepo: CityRepository = new CityRepository(
+      new MongodbDataSource()
+    );
+
+    let countryIds = stateData.map(stateItem => stateItem.countryId);
+    countryIds = [...new Set(countryIds)];
+
+    let countryData = await countryRepo.find({
+      fields: ["id","name", "countryId"],
+      where: {countryId: {inq: countryIds}}
+    });
+
+    let cityData = await cityRepo.find({
+      limit: 200,
+      where: {stateId: {inq: stateIds}}
+    });
+    
+    cityData = cityData.map(cityItem => {
+      let stateItem = [...stateData.filter(stateItem => stateItem.stateId === cityItem.stateId)][0];
+      let countryItem = [...new Set(countryData.filter(countryItem => countryItem.countryId === cityItem.countryId))][0];
+      cityItem.state = stateItem;
+      cityItem.country = countryItem;
+      return cityItem;
+    });
+
+    return cityData;
+  }
 }
