@@ -230,12 +230,12 @@ export class CityController {
 
     let countryData = await countryRepo.find({
       where: {countryId: {inq: countryIds} },
-      fields: ["id","name","iso2","countryId"]
+      fields: ["id","name","countryId"]
     });
 
     let stateData = await stateRepo.find({
       where: {stateId: {inq: stateIds} },
-      fields: ["id", "name", "stateCode","stateId"]
+      fields: ["id", "name", "stateId"]
     });
 
     cityData = cityData.map((item: any) => {
