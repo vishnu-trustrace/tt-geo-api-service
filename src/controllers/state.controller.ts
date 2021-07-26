@@ -19,6 +19,10 @@ export class StateController {
   constructor(
     @repository(StateRepository)
     public stateRepository : StateRepository,
+    @repository(CountryRepository)
+    public countryRepository : CountryRepository,
+    @repository(CityRepository)
+    public cityRepository: CityRepository
   ) {}
 
   @post('/states')
@@ -147,5 +151,44 @@ export class StateController {
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.stateRepository.deleteById(id);
+  }
+
+  @get('/states/search')
+  @response(200, {
+    description: 'Array of State model instances',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'array',
+          items: getModelSchemaRef(State, {includeRelations: true}),
+        },
+      },
+    },
+  })
+  async search(
+    @param.filter(State) filter?: Filter<State>,
+  ): Promise<City[]> {
+
+    const stateData = await this.stateRepository.find(filter);
+    let countryIds = stateData.map(stateItem => stateItem.countryId);
+    countryIds = [...new Set(countryIds)];
+    let stateIds = stateData.map(stateItem => stateItem.stateId);
+
+    let cityData: any[] = await this.cityRepository.find({
+      limit: 300,
+      where: {stateId: {inq: stateIds}}
+    });
+    let countryData = await this.countryRepository.find({
+      where: {countryId: {inq: countryIds}},
+      fields: ["id","name","countryId"]
+    });
+
+    cityData = cityData.map(cityItem => {
+      cityItem.country = countryData.filter(countryItem => countryItem.countryId === cityItem.countryId)[0];
+      cityItem.state = stateData.filter(stateItem => stateItem.stateId === cityItem.stateId)[0];
+      return cityItem;
+    });
+
+    return cityData;
   }
 }
