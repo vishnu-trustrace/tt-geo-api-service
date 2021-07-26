@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, belongsTo, hasMany} from '@loopback/repository';
+import {Country} from './country.model';
+import {City} from './city.model';
 
 @model({
   settings: {
@@ -53,6 +55,12 @@ export class State extends Entity {
     required: true,
   })
   longitude: string;
+
+  @belongsTo(() => Country, {name: 'country'})
+  countryObjId: string;
+
+  @hasMany(() => City, {keyTo: 'stateObjId'})
+  cities: City[];
 
   constructor(data?: Partial<State>) {
     super(data);

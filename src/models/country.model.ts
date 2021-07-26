@@ -1,4 +1,6 @@
-import {Entity, model, property} from '@loopback/repository';
+import {Entity, model, property, hasMany} from '@loopback/repository';
+import {State} from './state.model';
+import {City} from './city.model';
 
 @model({
   settings: {
@@ -99,6 +101,12 @@ export class Country extends Entity {
     type: 'object',
   })
   timezones?: object;
+
+  @hasMany(() => State, {keyTo: 'countryObjId'})
+  states: State[];
+
+  @hasMany(() => City, {keyTo: 'countryObjId'})
+  cities: City[];
 
   constructor(data?: Partial<Country>) {
     super(data);
