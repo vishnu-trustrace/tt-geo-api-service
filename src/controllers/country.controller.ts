@@ -45,12 +45,15 @@ export class CountryController {
     country: Country
   ): Promise<Country> {
 
-    let lastCountryObj = await this.countryRepository.find({
-      limit: 1,
-      order: ["countryId DESC"]
-    });
-
-    country.countryId = lastCountryObj.length ? lastCountryObj[0].countryId + 1 : 1;
+    if(!country.hasOwnProperty('countryId'))
+    {
+      let lastCountryObj = await this.countryRepository.find({
+        limit: 1,
+        order: ["countryId DESC"]
+      });
+  
+      country.countryId = lastCountryObj.length ? lastCountryObj[0].countryId + 1 : 1;
+    }
 
     return this.countryRepository.create(country);
   }

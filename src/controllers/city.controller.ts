@@ -39,12 +39,16 @@ export class CityController {
     })
     city: City,
   ): Promise<City> {
-    let lastCityObj = await this.cityRepository.find({
-      limit: 1,
-      order: ["cityId DESC"]
-    });
-
-    city.cityId = lastCityObj.length ? lastCityObj[0].cityId + 1 : 1;
+    
+    if(!city.hasOwnProperty('cityId'))
+    {
+      let lastCityObj = await this.cityRepository.find({
+        limit: 1,
+        order: ["cityId DESC"]
+      });
+  
+      city.cityId = lastCityObj.length ? lastCityObj[0].cityId + 1 : 1;
+    }
 
     return this.cityRepository.create(city);
   }

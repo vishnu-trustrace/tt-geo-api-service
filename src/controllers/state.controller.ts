@@ -42,12 +42,16 @@ export class StateController {
     })
     state: State,
   ): Promise<State> {
-    let lastStateObj = await this.stateRepository.find({
-      limit: 1,
-      order: ["stateId DESC"]
-    });
-
-    state.stateId = lastStateObj.length ? lastStateObj[0].stateId + 1 : 1;
+    
+    if(!state.hasOwnProperty('stateId'))
+    {
+      let lastStateObj = await this.stateRepository.find({
+        limit: 1,
+        order: ["stateId DESC"]
+      });
+  
+      state.stateId = lastStateObj.length ? lastStateObj[0].stateId + 1 : 1;
+    }
 
     return this.stateRepository.create(state);
   }
